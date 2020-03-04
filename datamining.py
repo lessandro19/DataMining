@@ -11,25 +11,17 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from collections import Counter
 import time
+import math
 start = time.time()
 #create an array that will hold our stems
-list_stem=[]
 #This List holds all of our document names
 DocumentNames=[]
 #This List holds a list of lists where each element of the list corresponds to the list of words for that specific document
-ListOfAllTerms=[]
-
+AllDocuments=[]
+N=0
 #This function adds all the words of the current doc, to our list of documents and their words
 def AppendTerms(tokens):
-    ListOfAllTerms.append(tokens)
-
-
-    
-    
-    
-
-
-
+    AllDocuments.append(tokens)
 
 corpusroot = "./presidential_debates"
 #read all files
@@ -46,41 +38,46 @@ for filename in os.listdir(corpusroot):
     #Append the tokens to our list 
     #Perform stemming on the tokens and store it in the list_stem, then add it to our stemmed tokens
     stemmer=PorterStemmer()
-    list_stem+=[stemmer.stem(word) for word in tokens]
-    AppendTerms(list_stem)
+    AppendTerms([stemmer.stem(word) for word in tokens])
     
-    
-#this function calculates the document frequency
-def documentsTermOccuredIn(term,vectorofdocuments):
-    #create our vector of booleans representing whether a term occurred in aspecifc doc or not
-    incidencevector=[0]*len(vectorofdocuments)
-    x=0
-    #iterate through each documen
-    for document in vectorofdocuments:
-        #iterate through each word that is in each document
-        for word in document:
-            #check if the word is the same as the term, if so add 1 to the incidence vector
-            if term==word:
-                incidencevector=incidencevector+1       
-         x=x+1
-    
-var=0 
-#iterate through our documents
-for x in ListOfAllTerms:
-    currentdoc=ListOfAllTerms[var]
-    #create a dictionary of the terms for a specific document
-    uniqueterms=Counter(currentdoc)
-    #N represents the number of documents, which is found by getting the size of our Documents vector
-    N=len(DocumentNames)
-    #iterate through each word in our specific document
-    for y in currentdoc:
-        currentterm=currentdoc[y]
-        #pass the currentterm and check how many documents the currentterm occurent in
-        incidencevector=documentsTermOccurredIn(currentterm,ListOfAllTerms)
-    var=var+1
-    
-    
+#This will hold our unique words that will be our keys for our TF-IDF vector
+TermFrequencies=[]
+for document in AllDocuments:
+    #create 
+    TermFrequencies.append(Counter(document))
+
+N=len(DocumentNames)
+#Convert to weighted frequency  
+
+#Go through each list of term frequencies
+for DocumentDictionary in TermFrequencies:
+    #go through each specific term
+    for key in DocumentDictionary:
+        #perform the weighted tf transformation
+        if DocumentDictionary[key]!=0:
+            DocumentDictionary[key]=1+math.log10(DocumentDictionary[key])
+#Go through each list of term frequencies            
+for DocumentDictionary in TermFrequencies:
+    #Go through each specific term
+    length=len(DocumentDictionary)
+    for key in DocumentDictionary:
+        #dft will keep track of the document frequency for our term
+        dft=0
+        #Create another loop that iterates through our Documents
+        for x in TermFrequencies:
+            #if the term exists in a Document(ie the key is valid)increment our document frequency
+            if key in x:
+                dft=dft+1
+        #Calculate the TF-IDF , then divide it by the magnitude of the vector        
+        DocumentDictionary[key]=(DocumentDictionary[key]*math.log10(N/dft))/length
 
 
+
+        
+    
+ 
+       
+  
+    
 end=time.time()
 print(end-start)
