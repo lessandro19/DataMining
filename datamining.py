@@ -13,6 +13,7 @@ from collections import Counter
 import time
 import math
 start = time.time()
+#import pdb; pdb.set_trace()
 #create an array that will hold our stems
 #This List holds all of our document names
 DocumentNames=[]
@@ -34,50 +35,69 @@ for filename in os.listdir(corpusroot):
     tokenizer=RegexpTokenizer(r'[a-zA-Z]+')
     tokens=tokenizer.tokenize(doc)
     #Add our tokens to our existing list of all words, also save the names of all the documents
-    DocumentNames+=filename
+    DocumentNames.append(filename)
     #Append the tokens to our list 
     #Perform stemming on the tokens and store it in the list_stem, then add it to our stemmed tokens
     stemmer=PorterStemmer()
     AppendTerms([stemmer.stem(word) for word in tokens])
     
 #This will hold our unique words that will be our keys for our TF-IDF vector
-TermFrequencies=[]
-for document in AllDocuments:
-    #create 
-    TermFrequencies.append(Counter(document))
 
 N=len(DocumentNames)
 #Convert to weighted frequency  
 
-#Go through each list of term frequencies
-for DocumentDictionary in TermFrequencies:
-    #go through each specific term
-    for key in DocumentDictionary:
-        #perform the weighted tf transformation
-        if DocumentDictionary[key]!=0:
-            DocumentDictionary[key]=1+math.log10(DocumentDictionary[key])
-#Go through each list of term frequencies            
-for DocumentDictionary in TermFrequencies:
-    #Go through each specific term
-    length=len(DocumentDictionary)
-    for key in DocumentDictionary:
-        #dft will keep track of the document frequency for our term
-        dft=0
-        #Create another loop that iterates through our Documents
-        for x in TermFrequencies:
-            #if the term exists in a Document(ie the key is valid)increment our document frequency
-            if key in x:
-                dft=dft+1
-        #Calculate the TF-IDF , then divide it by the magnitude of the vector        
-        DocumentDictionary[key]=(DocumentDictionary[key]*math.log10(N/dft))/length
 
+UniqueTerms=[]    
 
+for document in AllDocuments:
+    uniquedoc=Counter(document)
+    UniqueTerms.append(uniquedoc)  
+for document in UniqueTerms:
+    for word in document:
+        document[word]=1+(math.log10(document[word]))
+        
+def getidf(token):
+    Occurrences=[0]*N
+    iterator=0
+    idf=-1
+    for DocumentDictionary in UniqueTerms:
+        if token in DocumentDictionary:
+            Occurrences[iterator]=1
+        iterator=iterator+1
+        
+    docsoccurredin=sum(Occurrences)
+    if docsoccurredin!=0:
+        idf=math.log10(N/docsoccurredin)
+    return idf
+
+#calculate the TF-IDF weight and store it in a dictionary called TF
+length=0
+for document in UniqueTerms:
+    
+    for word in document:
+        idf=getidf(word)
+        document[word]=document[word]*idf
+        length=length+(document[word]*document[word])
+ 
+magnitude=math.sqrt(length)
+
+for document in UniqueTerms:
+    for word in document:
+        document[word]=document[word]/magnitude
+        
+       
 
         
+        
+        
+         
     
- 
-       
-  
+def getweight(document,term):
+    x=DocumentNames.index(document)
+    indexeddocument=UniqueTerms[x]
+    if term in indexeddocument:
+        return indexeddocument[term]
+    else:
+        return 0
     
-end=time.time()
-print(end-start)
+print("%.12f" % getweight("2012-10-03.txt","health"))
