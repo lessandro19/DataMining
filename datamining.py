@@ -47,11 +47,18 @@ N=len(DocumentNames)
 #Convert to weighted frequency  
 
 
+#Create a list/dictionary that will hold all of our unique terms. This will be a list of dictionaries
 UniqueTerms=[]    
 
+#this for-loop creates a dictionary from each document. The counter function gets the unique words which are the "keys" and the number
+#of times they occured as "values". UniqueTerms is now a list of term-frequency dictionaries for each document
 for document in AllDocuments:
     uniquedoc=Counter(document)
     UniqueTerms.append(uniquedoc)  
+    
+
+
+#nested for loop 
 for document in UniqueTerms:
     for word in document:
         document[word]=1+(math.log10(document[word]))
@@ -71,20 +78,23 @@ def getidf(token):
     return idf
 
 #calculate the TF-IDF weight and store it in a dictionary called TF
-length=0
-for document in UniqueTerms:
     
+magnitude=[]
+for document in UniqueTerms:
+    length=0
     for word in document:
         idf=getidf(word)
         document[word]=document[word]*idf
-        length=length+(document[word]*document[word])
+        length=length+(math.pow(document[word],2))
  
-magnitude=math.sqrt(length)
+    magnitude.append(math.sqrt(length))
+    
 
+iterator=0
 for document in UniqueTerms:
     for word in document:
-        document[word]=document[word]/magnitude
-        
+        document[word]=document[word]/magnitude[iterator]
+    iterator=iterator+1
        
 
         
@@ -101,3 +111,7 @@ def getweight(document,term):
         return 0
     
 print("%.12f" % getweight("2012-10-03.txt","health"))
+print("%.12f" % getweight("1960-10-21.txt","reason"))
+print("%.12f" % getweight("1976-10-22.txt","agenda"))
+print("%.12f" % getweight("2012-10-16.txt","hispan"))
+print("%.12f" % getweight("2012-10-16.txt","hispanic"))
