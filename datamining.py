@@ -10,9 +10,7 @@ from nltk.tokenize import RegexpTokenizer
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from collections import Counter
-import time
 import math
-start = time.time()
 #import pdb; pdb.set_trace()
 #create an array that will hold our stems
 #This List holds all of our document names
@@ -58,11 +56,7 @@ for document in AllDocuments:
     
 
 
-#nested for loop 
-for document in UniqueTerms:
-    for word in document:
-        document[word]=1+(math.log10(document[word]))
-        
+#This function gets the inverse document frequency of a term and returns it         
 def getidf(token):
     Occurrences=[0]*N
     iterator=0
@@ -77,13 +71,18 @@ def getidf(token):
         idf=math.log10(N/docsoccurredin)
     return idf
 
-#calculate the TF-IDF weight and store it in a dictionary called TF
-    
+#For each word in our term-frequency dictionary, we need to calculate the TF-IDF values for each word
+
+#Create a magnitude list to keep track of the magnitude of each document    
 magnitude=[]
+#iterate through each dictionary in our list of term-frequency dictionaries
 for document in UniqueTerms:
+    #length will keep track of the current document's TF-IDF vector magnitude
     length=0
     for word in document:
+        #for each word in our document term-frequency dictionary, find the idf
         idf=getidf(word)
+        document[word]=1+(math.log10(document[word]))
         document[word]=document[word]*idf
         length=length+(math.pow(document[word],2))
  
@@ -110,8 +109,89 @@ def getweight(document,term):
     else:
         return 0
     
-print("%.12f" % getweight("2012-10-03.txt","health"))
-print("%.12f" % getweight("1960-10-21.txt","reason"))
-print("%.12f" % getweight("1976-10-22.txt","agenda"))
-print("%.12f" % getweight("2012-10-16.txt","hispan"))
-print("%.12f" % getweight("2012-10-16.txt","hispanic"))
+def query(qstring):
+    #create a list based on the words in our query
+    qstring=qstring.lower()
+    stringvector=qstring.split()
+    #use the counter dictionary method to get the term frequency for each term in the query
+    WordCountsInQString=Counter(stringvector)
+    #create a variable that tracks the magnitude
+    length=0
+    
+    #for each term(key) in our string, we need to do weight frequency for each term
+    
+    for key in WordCountsInQString:
+        WordCountsInQString[key]=1+math.log10(WordCountsInQString[key])
+        #Square the frequency and add it to the magnitude
+        length=length+(math.pow(WordCountsInQString[key],2))
+    
+    #take the square root of our length vector
+    
+    
+    
+    
+    
+    magnitude=math.sqrt(length)
+    #divide each weighted termfrequency by the magnitude to normalize our tfidf vector     
+    for key in WordCountsInQString:
+        WordCountsInQString[key]=WordCountsInQString[key]/magnitude
+        
+        
+    #postings list is a a list of tf-idf lists for each word
+    postingslist=[]
+   
+    #iterate through each word in the list
+    for Word in WordCountsInQString:
+        #create a WordList list that will keep track of the current term's TF-IDF weights across all documents
+        TFIDFValuesforSpecificTerm=[]
+        #clear it just incase it has any previous data
+        TFIDFValuesforSpecificTerm.clear()
+        
+        #iterate through all of our TF-IDF vectors
+        
+        for document in UniqueTerms:
+            #set our value to negative 1 as default
+            value=0
+            #check if the word is in that documents TF-IDF vector, if so get the weight
+            if Word in document:
+                value=document[Word]
+            #append the TF-IDF weight to our vector of tf-idf weights
+            TFIDFValuesforSpecificTerm.append(value)
+            
+        #once we have all the TF-IDF vectors for a word, we add it to our QueryList so we can iterate through it later
+               
+        postingslist.append(TFIDFValuesforSpecificTerm)
+    
+    #iterate through each term's tf-idf vector
+    
+    TopTenIDFpostinglist=[]
+    documentnames=[]
+    #this loop gets the top 10 tf-idf vectors for tf-idf vector in our postings list
+    for tfidfvector in postingslist:
+        #create a list of the top 10 tfidfvectors
+        TopTenVal=sorted(tfidfvector, reverse=True)[:10]
+        index=[]
+        #iterate through each tfidf vector in our toptenvalues vector and get it's index (the document it belongs to)
+        for val in TopTenVal:
+            
+            index.append(DocumentNames[tfidfvector.index(val)])
+            
+        TopTenIDFpostinglist.append(TopTenVal)
+        documentnames.append(index)
+    
+    #now that we have our list of each term's top 10 tf-idf list(TopTenIDFpostinglist) and their corresponding documents(documetnames)
+    #we need to find which documents d appear in the top-10 elements of each token in our query
+    
+    #case 1:check whether a document appears in all 
+    
+    
+    
+    return 'none', 0
+        
+
+print("(%s, %.12f)" % query("terror attack"))
+        
+        
+    
+            
+            
